@@ -1,30 +1,18 @@
-from datetime import datetime
-
-def parse_event(event):
-    if "timestamp" in event:
-        event["timestamp"] = datetime.fromisoformat(event["timestamp"])
-    return event
-import json
 from kafka import KafkaConsumer
-from datetime import datetime
-
-consumer = KafkaConsumer(
-    "network-logs",
-    bootstrap_servers="localhost:9092",
-    value_deserializer=lambda m: json.loads(m.decode("utf-8")),
-    auto_offset_reset="earliest",
-    enable_auto_commit=True,
-for msg in consumer:
-    yield parse_event(json.loads(msg.value))
-)
-
-def parse_kafka_event(event):
-    # Convert timestamp back to datetime
-    if "timestamp" in event:
-        event["timestamp"] = datetime.fromisoformat(event["timestamp"])
-    return event
+import json
 
 def consume_logs():
-    print("[Kafka Consumer] Waiting for logs...")
-    for message in consumer:
-        yield parse_kafka_event(message.value)
+    consumer = KafkaConsumer(
+        "network-logs",
+        bootstrap_servers="localhost:9092",
+        auto_offset_reset="earliest",
+        enable_auto_commit=True,
+        group_id="threatscope-group",
+        value_deserializer=lambda v: json.loads(v.decode("utf-8"))
+    )
+
+    print("🟣 [Kafka Consumer] Listening for logs...")
+
+    for msg in consumer:
+        yield msg.value
+

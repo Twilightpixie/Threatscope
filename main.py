@@ -1,3 +1,26 @@
+def process_logs(parsed_logs):
+    # Feature extraction
+    features = extract_time_window_features(parsed_logs, window_seconds=60)
+
+    # AI detection + MITRE
+    decisions = enrich_with_mitre(detect_anomalies(features))
+
+    # IDS
+    apply_ids(decisions)
+
+    # Explanations
+    for d in decisions:
+        if d.get("action") == "block":
+            explain_decision(d)
+
+    # IPS
+    apply_ips(decisions)
+
+    # Store results
+    for d in decisions:
+        send_to_elastic(d)
+
+    return decisions
 # =========================
 # Imports (ONLY imports)
 # =========================
@@ -35,33 +58,38 @@ parsed_logs = parse_logs(raw_logs)
 print("\n=== DEBUG: Parsed Logs ===")
 print(parsed_logs)
 
-# 2.Feature extraction
+# 2. Run ThreatScope core
+decisions = process_logs(parsed_logs)
+
+print("✅ Events sent to Elasticsearch")
+
+# 3.Feature extraction
 features = extract_time_window_features(parsed_logs, window_seconds=60)
 
-# 3.AI detection + MITRE enrichment
+# 4.AI detection + MITRE enrichment
 decisions = enrich_with_mitre(detect_anomalies(features))
-# 4. Store detections in Elastic (ADDED, SAFE)
+# 5. Store detections in Elastic (ADDED, SAFE)
 from ingestion.elastic_writer import send_to_elastic
 
 for d in decisions:
     send_to_elastic(d)
 
-# 5.IDS alerts + explanations
+# 6.IDS alerts + explanations
 apply_ids(decisions)
 for d in decisions:
     if d.get("action") == "block":
         explain_decision(d)
 
-# 6.IPS enforcement
+# 7.IPS enforcement
 apply_ips(decisions)
 
-# 7.Store results in Elasticsearch
+# 8.Store results in Elasticsearch
 for decision in decisions:
     send_to_elastic(decision)
 
 print("✅ Events sent to Elasticsearch")
 
-# 8.Evaluation
+# 9.Evaluation
 print("\n=== DEBUG: Decisions ===")
 for d in decisions:
     print(d)
@@ -72,11 +100,11 @@ print("\n=== Evaluation Metrics ===")
 for k, v in metrics.items():
     print(f"{k}: {v:.2f}" if isinstance(v, float) else f"{k}: {v}")
 
-# 9.Technical timeline
+# 10.Technical timeline
 timelines = build_attack_timeline(parsed_logs, decisions)
 print_timeline(timelines)
 
-# 10.Narrative (story) timeline
+# 11.Narrative (story) timeline
 story = build_narrative_timeline(parsed_logs, decisions)
 print_narrative(story)
 

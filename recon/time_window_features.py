@@ -1,26 +1,29 @@
 from collections import defaultdict
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 def extract_time_window_features(parsed_logs, window_seconds=60):
-    parsed_logs.sort(key=lambda x: x["timestamp"])
-
-    # Each (IP, window) maps to a SET of ports
-    windows = defaultdict(set)
+    features = defaultdict(lambda: {"ports": set(), "timestamps": []})
 
     for entry in parsed_logs:
-        window_start = entry["timestamp"] - timedelta(
-            seconds=entry["timestamp"].second % window_seconds
-        )
+        ts = entry["timestamp"]
 
-        windows[(entry["src_ip"], window_start)].add(entry["dst_port"])
+        # ✅ FIX: Convert string timestamps (Kafka) → datetime
+        if isinstance(ts, str):
+            ts = datetime.fromisoformat(ts)
 
-    features = []
-    for (ip, window), ports in windows.items():
-        features.append({
+        ip = entry["src_ip"]
+        features[ip]["ports"].add(entry["dst_port"])
+        features[ip]["timestamps"].append(ts)
+
+    results = []
+
+    for ip, data in features.items():
+        unique_ports = len(data["ports"])
+        results.append({
             "src_ip": ip,
-            "window_start": window,
-            "unique_ports": len(ports)
+            "unique_ports": unique_ports,
+            "time_window": f"{window_seconds} seconds"
         })
 
-    return features
+    return results
 
