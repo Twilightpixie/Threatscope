@@ -1,5 +1,3 @@
-
-
 def process_logs(parsed_logs):
     # Feature extraction
     features = extract_time_window_features(parsed_logs, window_seconds=60)
