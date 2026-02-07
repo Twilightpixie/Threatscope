@@ -1,3 +1,5 @@
+
+
 def process_logs(parsed_logs):
     # Feature extraction
     features = extract_time_window_features(parsed_logs, window_seconds=60)
@@ -61,7 +63,7 @@ print(parsed_logs)
 # 2. Run ThreatScope core
 decisions = process_logs(parsed_logs)
 
-print("✅ Events sent to Elasticsearch")
+print("\u2705 Events sent to Elasticsearch")
 
 # 3.Feature extraction
 features = extract_time_window_features(parsed_logs, window_seconds=60)
@@ -87,7 +89,7 @@ apply_ips(decisions)
 for decision in decisions:
     send_to_elastic(decision)
 
-print("✅ Events sent to Elasticsearch")
+print("\u2705 Events sent to Elasticsearch")
 
 # 9.Evaluation
 print("\n=== DEBUG: Decisions ===")
@@ -107,4 +109,3 @@ print_timeline(timelines)
 # 11.Narrative (story) timeline
 story = build_narrative_timeline(parsed_logs, decisions)
 print_narrative(story)
-
