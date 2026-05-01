@@ -1,24 +1,15 @@
-import argparse
+#!/usr/bin/env python3
+"""ThreatScope Main Entry Point"""
+import sys
+from rich.console import Console
 
-def run_batch():
-    print("🟢 Running ThreatScope in BATCH mode")
-    import main  # uses your existing batch pipeline
+console = Console()
 
-def run_stream():
-    print("🟣 Running ThreatScope in STREAMING mode")
-    import main_streaming  # uses your Kafka pipeline
+def main():
+    console.print("[bold green]🚀 ThreatScope Starting...[/bold green]")
+    console.print("📌 Run `python main_streaming.py` for full streaming mode")
+    console.print("📌 Run `docker-compose up` for complete stack")
+    # TODO: Add your main logic here later
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="ThreatScope SIEM")
-    parser.add_argument(
-        "--mode",
-        choices=["batch", "stream"],
-        required=True,
-        help="Run mode: batch (file-based) or stream (Kafka)"
-    )
-    args = parser.parse_args()
-
-    if args.mode == "batch":
-        run_batch()
-    elif args.mode == "stream":
-        run_stream()
+    main()
