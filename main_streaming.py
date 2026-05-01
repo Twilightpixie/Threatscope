@@ -1,26 +1,23 @@
-from ingestion.kafka_consumer import consume_logs
-from recon.time_window_features import extract_time_window_features
-from ai_engine.anomaly_model import detect_anomalies
-from correlation.mitre_enricher import enrich_with_mitre
-from ids.ids_engine import apply_ids
-from ips.ips_engine import apply_ips
-from explain.explainer import explain_decision
+#!/usr/bin/env python3
+"""ThreatScope - Real-time Streaming Main"""
+import structlog
+from rich.console import Console
+from config.settings import settings
 
-print("🚀 ThreatScope Streaming Mode Started")
+console = Console()
+logger = structlog.get_logger()
 
-buffer = []
+def main():
+    logger.info("🚀 Starting ThreatScope Streaming Engine",
+                kafka_servers=settings.KAFKA_BOOTSTRAP_SERVERS,
+                es_host=settings.ES_HOST)
+    
+    console.print("[bold green]ThreatScope Streaming Mode[/bold green]")
+    console.print(f"📡 Kafka: {settings.KAFKA_BOOTSTRAP_SERVERS}")
+    console.print(f"📊 Elasticsearch: {settings.ES_HOST}:{settings.ES_PORT}")
+    
+    # TODO: Add your streaming logic here (ingestion + correlation)
+    logger.info("✅ Streaming engine initialized")
 
-for event in consume_logs():
-    buffer.append(event)
-
-    if len(buffer) >= 20:   # simple micro-batch
-        features = extract_time_window_features(buffer, window_seconds=60)
-        decisions = enrich_with_mitre(detect_anomalies(features))
-
-        apply_ids(decisions)
-        apply_ips(decisions)
-
-        for d in decisions:
-            explain_decision(d)
-
-        buffer.clear()
+if __name__ == "__main__":
+    main()
