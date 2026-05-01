@@ -1,0 +1,22 @@
+[project]
+name = "threatscope"
+version = "0.1.0"
+description = "Explainable AI-Powered SIEM"
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "B", "I"]
+ignore = []
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_config = true
+disallow_untyped_defs = true
+check_untyped_defs = true
