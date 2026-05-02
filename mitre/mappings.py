@@ -3,12 +3,7 @@ MITRE_RECON_MAPPING = {
         "tactic": "Reconnaissance",
         "tactic_id": "TA0043",
         "technique": "Network Service Discovery",
-        "technique_id": "T1046"
+        "technique_id": "T1046",
     },
-    "normal_behavior": {
-        "tactic": None,
-        "tactic_id": None,
-        "technique": None,
-        "technique_id": None
-    }
+    "normal_behavior": {"tactic": None, "tactic_id": None, "technique": None, "technique_id": None},
 }

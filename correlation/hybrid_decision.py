@@ -7,17 +7,8 @@ def hybrid_decision(rule_results, ai_results):
         ip = r["src_ip"]
 
         if ai_lookup.get(ip) == "block" or r["rule_alert"]:
-            final.append({
-                "src_ip": ip,
-                "action": "block",
-                "reason": "hybrid_detection"
-            })
+            final.append({"src_ip": ip, "action": "block", "reason": "hybrid_detection"})
         else:
-            final.append({
-                "src_ip": ip,
-                "action": "allow",
-                "reason": "normal"
-            })
+            final.append({"src_ip": ip, "action": "allow", "reason": "normal"})
 
     return final
-

@@ -7,10 +7,8 @@ def detect_recon(features, port_threshold=3):
         else:
             verdict = "NORMAL"
 
-        results.append({
-            "src_ip": f["src_ip"],
-            "unique_ports": f["unique_ports"],
-            "verdict": verdict
-        })
+        results.append(
+            {"src_ip": f["src_ip"], "unique_ports": f["unique_ports"], "verdict": verdict}
+        )
 
     return results

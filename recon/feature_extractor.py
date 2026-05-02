@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+
 def extract_recon_features(parsed_logs):
     ip_ports = defaultdict(set)
 
@@ -8,12 +9,11 @@ def extract_recon_features(parsed_logs):
 
     features = []
     for ip, ports in ip_ports.items():
-        features.append({
-            "src_ip": ip,
-            "unique_ports": len(ports)
-        })
+        features.append({"src_ip": ip, "unique_ports": len(ports)})
 
     return features
+
+
 def classify_recon(features, port_threshold=3):
     results = []
 
@@ -23,11 +23,6 @@ def classify_recon(features, port_threshold=3):
         else:
             status = "NORMAL"
 
-        results.append({
-            "src_ip": f["src_ip"],
-            "unique_ports": f["unique_ports"],
-            "status": status
-        })
+        results.append({"src_ip": f["src_ip"], "unique_ports": f["unique_ports"], "status": status})
 
     return results
-

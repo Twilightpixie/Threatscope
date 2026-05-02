@@ -18,11 +18,4 @@ def compute_metrics(decisions, ground_truth):
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0
     recall = tp / (tp + fn) if (tp + fn) > 0 else 0
 
-    return {
-        "TP": tp,
-        "FP": fp,
-        "FN": fn,
-        "TN": tn,
-        "precision": precision,
-        "recall": recall
-    }
+    return {"TP": tp, "FP": fp, "FN": fn, "TN": tn, "precision": precision, "recall": recall}

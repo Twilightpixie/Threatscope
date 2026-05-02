@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+
 def build_attack_timeline(parsed_logs, decisions):
     timelines = defaultdict(list)
 
@@ -7,10 +8,7 @@ def build_attack_timeline(parsed_logs, decisions):
 
     for entry in parsed_logs:
         ip = entry["src_ip"]
-        timelines[ip].append({
-            "timestamp": entry["timestamp"],
-            "dst_port": entry["dst_port"]
-        })
+        timelines[ip].append({"timestamp": entry["timestamp"], "dst_port": entry["dst_port"]})
 
     # Sort events by time
     for ip in timelines:
@@ -21,9 +19,6 @@ def build_attack_timeline(parsed_logs, decisions):
 
     for ip, events in timelines.items():
         verdict = decision_lookup.get(ip, {})
-        final_timelines[ip] = {
-            "verdict": verdict,
-            "events": events
-        }
+        final_timelines[ip] = {"verdict": verdict, "events": events}
 
     return final_timelines

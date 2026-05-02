@@ -1,7 +1,3 @@
-from ai_engine.confidence import compute_confidence
-from ai_engine.severity import confidence_to_severity
-
-
 def detect_anomalies(features):
     decisions = []
 
