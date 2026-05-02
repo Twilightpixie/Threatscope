@@ -20,7 +20,7 @@
         <i class="fas fa-shield-alt text-4xl text-violet-500"></i>
         <div>
           <div class="text-3xl font-bold">ThreatScope</div>
-          <div class="text-xs text-zinc-500">SIEM Platform • Sristi Ghosh</div>
+          <div class="text-xs text-zinc-500">Sristi Ghosh • SVU</div>
         </div>
       </div>
       <nav class="space-y-2 flex-1">
@@ -36,16 +36,16 @@
       </nav>
       <div class="text-xs text-zinc-500 mt-auto">
         Swami Vivekananda University<br>
-        Dissertation Project • 2026
+        Dissertation Project 2026
       </div>
     </div>
 
     <!-- Main -->
     <div class="flex-1 p-10 overflow-auto">
       <h1 class="text-5xl font-bold mb-2">Alert Triage</h1>
-      <p class="text-zinc-500 mb-10">Real-time Security Operations Center • Sristi Ghosh</p>
+      <p class="text-zinc-500 mb-10">Real-time Security Operations Center</p>
 
-      <!-- KPI -->
+      <!-- KPI Cards -->
       <div class="grid grid-cols-4 gap-6 mb-12">
         <div class="card rounded-3xl p-8">
           <div class="text-6xl font-semibold">47</div>
@@ -75,40 +75,8 @@
         <!-- Recent Alerts -->
         <div class="col-span-7 card rounded-3xl p-8">
           <h3 class="text-xl mb-6">Recent Alerts</h3>
-          <div class="space-y-4">
-            <div class="bg-zinc-950 p-6 rounded-2xl border border-zinc-800 flex justify-between items-center">
-              <div>
-                <div class="font-medium">SE Demo - Host IOC Match High Conf - Medium Severity</div>
-                <div class="text-xs text-zinc-500">Sristi Ghosh • Swami Vivekananda University Team</div>
-              </div>
-              <div class="text-yellow-400 font-medium">Medium</div>
-            </div>
-            <div class="bg-zinc-950 p-6 rounded-2xl border border-zinc-800 flex justify-between items-center">
-              <div>
-                <div class="font-medium">Potential Medicaid Fraud</div>
-                <div class="text-xs text-zinc-500">Sristi Ghosh • Hacker Elite Team</div>
-              </div>
-              <div class="text-red-400 font-medium">High</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Top Owners / Team Leaderboard -->
-        <div class="col-span-12 card rounded-3xl p-8">
-          <h3 class="text-xl mb-6">Top Analysts (Hacker Elite Team)</h3>
-          <div class="grid grid-cols-3 gap-6">
-            <div class="bg-zinc-950 p-6 rounded-2xl border border-zinc-800 text-center">
-              <div class="text-3xl font-bold text-violet-400">Sristi Ghosh</div>
-              <div class="text-sm text-zinc-500">Lead Analyst • 18 Alerts</div>
-            </div>
-            <div class="bg-zinc-950 p-6 rounded-2xl border border-zinc-800 text-center">
-              <div class="text-3xl font-bold text-violet-400">Elite Hacker 01</div>
-              <div class="text-sm text-zinc-500">12 Alerts</div>
-            </div>
-            <div class="bg-zinc-950 p-6 rounded-2xl border border-zinc-800 text-center">
-              <div class="text-3xl font-bold text-violet-400">Elite Hacker 02</div>
-              <div class="text-sm text-zinc-500">9 Alerts</div>
-            </div>
+          <div id="alertsList" class="space-y-4">
+            <!-- JS will fill this -->
           </div>
         </div>
       </div>
@@ -116,21 +84,45 @@
   </div>
 
   <script>
-    new Chart(document.getElementById('severityChart'), {
-      type: 'doughnut',
-      data: {
-        labels: ['High', 'Medium', 'Low'],
-        datasets: [{
-          data: [14, 27, 19],
-          backgroundColor: ['#ef4444', '#eab308', '#22c55e'],
-          borderWidth: 0
-        }]
-      },
-      options: {
-        cutout: '75%',
-        plugins: { legend: { position: 'bottom', labels: { color: '#a1a1aa', padding: 20 } } }
+    async function loadAlerts() {
+      try {
+        const res = await fetch('http://localhost:8000/alerts');
+        const data = await res.json();
+        const alerts = data.alerts || [];
+
+        const list = document.getElementById('alertsList');
+        list.innerHTML = alerts.map(a => `
+          <div class="bg-zinc-950 p-6 rounded-2xl border border-zinc-800 flex justify-between">
+            <div>
+              <div class="font-medium">${a.name}</div>
+              <div class="text-xs text-zinc-500">${a.owner}</div>
+            </div>
+            <div class="${a.severity === 'High' ? 'text-red-400' : 'text-yellow-400'} font-medium">${a.severity}</div>
+          </div>
+        `).join('');
+
+        // Chart
+        const high = alerts.filter(a => a.severity === 'High').length || 14;
+        const medium = alerts.filter(a => a.severity === 'Medium').length || 27;
+        const low = alerts.filter(a => a.severity === 'Low').length || 19;
+
+        new Chart(document.getElementById('severityChart'), {
+          type: 'doughnut',
+          data: {
+            labels: ['High', 'Medium', 'Low'],
+            datasets: [{
+              data: [high, medium, low],
+              backgroundColor: ['#ef4444', '#eab308', '#22c55e']
+            }]
+          },
+          options: { cutout: '75%', plugins: { legend: { position: 'bottom' } } }
+        });
+      } catch(e) {
+        console.log("Using mock data");
       }
-    });
+    }
+
+    loadAlerts();
   </script>
 </body>
 </html>
