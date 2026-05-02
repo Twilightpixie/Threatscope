@@ -1,6 +1,7 @@
 from ai_engine.confidence import compute_confidence
 from ai_engine.severity import confidence_to_severity
 
+
 def detect_anomalies(features):
     decisions = []
 
@@ -18,17 +19,15 @@ def detect_anomalies(features):
         elif confidence >= 0.4:
             severity = "MEDIUM"
 
-        decisions.append({
-            "src_ip": src_ip,
-            "action": "block" if anomaly else "allow",
-            "reason": "reconnaissance_detected" if anomaly else "normal_behavior",
-            "confidence": round(confidence, 2),
-            "severity": severity,
-            "details": {
-                "unique_ports": unique_ports,
-                "time_window": "60 seconds"
+        decisions.append(
+            {
+                "src_ip": src_ip,
+                "action": "block" if anomaly else "allow",
+                "reason": "reconnaissance_detected" if anomaly else "normal_behavior",
+                "confidence": round(confidence, 2),
+                "severity": severity,
+                "details": {"unique_ports": unique_ports, "time_window": "60 seconds"},
             }
-        })
+        )
 
     return decisions
-
