@@ -1,9 +1,68 @@
-# Python cache
+# ─── Python ───────────────────────────────────────────────────────────────────
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.pyo
+
+# ─── Virtual Environments (DO NOT COMMIT) ────────────────────────────────────
 venv/
-__pycache__/
-*.pyc
-.DS_Store
-*.log
+env/
+.venv/
+.env/
+ENV/
+
+# ─── Environment & Secrets ───────────────────────────────────────────────────
 .env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# ─── IDE ──────────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ─── Testing & Coverage ──────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.coveragerc
+
+# ─── Logs (keep the folder, ignore the files) ────────────────────────────────
+logs/*.log
+logs/*.pcap
+
+# ─── ML Models (large binaries — store in DVC or model registry) ─────────────
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.onnx
+models/
+
+# ─── Jupyter ──────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ─── Docker ───────────────────────────────────────────────────────────────────
+*.env.docker
+
+# ─── Elasticsearch data ───────────────────────────────────────────────────────
+esdata/
+
+# ─── Node (UI) ────────────────────────────────────────────────────────────────
+ui/node_modules/
+ui/.next/
+ui/dist/
+ui/build/

@@ -1,30 +1,40 @@
-# Core dependencies
-kafka-python>=2.0.2
-elasticsearch>=8.15.0
+# ─── Core SIEM Pipeline ───────────────────────────────────────────────────────
+scikit-learn>=1.4.0
+numpy>=1.26.3
 pandas>=2.2.0
-numpy>=1.26.0
-scikit-learn>=1.5.0
-shap>=0.46.0
-lime>=0.2.0.1
 
-# Streaming & API
-fastapi>=0.115.0
-uvicorn[standard]>=0.30.0
-pydantic>=2.9.0
+# ─── Elasticsearch Client ─────────────────────────────────────────────────────
+elasticsearch>=8.12.0
 
-# Logging & Utils
-structlog>=24.4.0
-rich>=13.9.0
-pyyaml>=6.0.2
-python-dotenv>=1.0.1
-requests>=2.32.0
+# ─── Kafka Streaming ──────────────────────────────────────────────────────────
+kafka-python>=2.0.2
 
-# MITRE ATT&CK (correct name)
-mitreattack-python>=2.0.0
+# ─── Configuration & Settings ─────────────────────────────────────────────────
+python-dotenv>=1.0.0
+pydantic>=2.6.0
+pydantic-settings>=2.2.0
+PyYAML>=6.0.1
 
-# Testing & Quality
-pytest>=8.3.0
-pytest-asyncio>=0.24.0
-mypy>=1.11.0
-black>=24.8.0
-ruff>=0.6.0
+# ─── Logging & CLI Output ─────────────────────────────────────────────────────
+structlog>=24.1.0
+rich>=13.7.0
+
+# ─── Explainability (XAI) ─────────────────────────────────────────────────────
+shap>=0.44.0
+
+# ─── Threat Intelligence ──────────────────────────────────────────────────────
+requests>=2.31.0
+
+# ─── Network / Packet Analysis ────────────────────────────────────────────────
+scapy>=2.5.0
+
+# ─── Testing ──────────────────────────────────────────────────────────────────
+pytest>=8.0.0
+pytest-cov>=4.1.0
+pytest-mock>=3.12.0
+
+# ─── Type Checking ────────────────────────────────────────────────────────────
+mypy>=1.8.0
+
+# ─── Code Quality ─────────────────────────────────────────────────────────────
+ruff>=0.3.0
