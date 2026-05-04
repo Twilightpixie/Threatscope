@@ -1,6 +1,7 @@
 # 🛡️ ThreatScope SIEM
 
 **An AI-powered Security Information and Event Management system built for MSc Cybersecurity research.**
+Check out the dashboard at :https://twilightpixie.github.io/Threatscope/
 
 ThreatScope combines machine learning anomaly detection, MITRE ATT&CK enrichment, automated IDS/IPS response, and explainable AI (XAI) into a modular, production-realistic pipeline.
 
