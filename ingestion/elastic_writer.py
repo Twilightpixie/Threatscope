@@ -2,7 +2,7 @@ import json
 
 import requests
 
-ELASTIC_URL = "http://localhost:9200/threatscope-events/_doc"
+ELASTIC_URL = "http://localhost:9201/threatscope-events/_doc"
 
 
 def send_to_elastic(event):
