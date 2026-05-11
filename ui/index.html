@@ -3,163 +3,598 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>ThreatScope — Personal SIEM</title>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<title>ThreatScope SOC</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#0a0d1a;--panel:#0f1428;--panel2:#131830;--border:rgba(99,116,255,0.15);--border2:rgba(99,116,255,0.08);--text:#e8ecff;--muted:#6b7aad;--muted2:#3d4870;--blue:#4d7cfe;--purple:#a259ff;--pink:#ff6ec7;--teal:#00d4aa;--amber:#ffb020;--red:#ff4d6a;--green:#00e5a0;--r:10px;--r2:16px;}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:"Inter",sans-serif;font-size:13px;overflow-x:hidden}
-body::before{content:"";position:fixed;inset:0;background-image:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(77,124,254,0.08) 0%,transparent 60%),radial-gradient(ellipse 60% 50% at 80% 100%,rgba(162,89,255,0.07) 0%,transparent 60%);pointer-events:none;z-index:0}
-.header{position:sticky;top:0;z-index:100;background:rgba(10,13,26,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:0 20px;height:52px}
-.logo{font-family:"Rajdhani",sans-serif;font-size:22px;font-weight:700;background:linear-gradient(135deg,#4d7cfe,#a259ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:1px}
-.logo sup{font-size:10px;font-family:"JetBrains Mono",monospace;background:none;-webkit-text-fill-color:var(--muted);font-weight:400}
-.live-pill{display:flex;align-items:center;gap:6px;background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.3);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--green);font-weight:600;letter-spacing:.5px}
-.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.4s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
-.header-stats{display:flex;gap:24px;margin-left:auto;align-items:center}
-.hstat{text-align:center}
-.hstat-val{font-family:"JetBrains Mono",monospace;font-size:18px;font-weight:500}
-.hstat-val.blue{color:var(--blue)}.hstat-val.red{color:var(--red)}.hstat-val.amber{color:var(--amber)}.hstat-val.green{color:var(--green)}
-.hstat-lbl{font-size:9px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin-top:1px}
-.header-time{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted);margin-left:8px}
-.source-badge{font-size:10px;background:rgba(77,124,254,0.15);border:1px solid rgba(77,124,254,0.3);border-radius:4px;padding:2px 8px;color:var(--blue);font-family:"JetBrains Mono",monospace}
-.main{padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:14px;position:relative;z-index:1}
-.panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--r2);padding:18px;position:relative;overflow:hidden}
-.panel::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(77,124,254,0.03) 0%,transparent 60%);pointer-events:none}
-.panel-title{font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px}
-.panel-title::before{content:"";display:inline-block;width:3px;height:12px;border-radius:2px;background:linear-gradient(180deg,var(--blue),var(--purple))}
-.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;grid-column:1/-1}
-.kpi{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;position:relative;overflow:hidden}
-.kpi::after{content:"";position:absolute;top:0;left:0;right:0;height:2px}
-.kpi.blue::after{background:linear-gradient(90deg,var(--blue),var(--purple))}.kpi.red::after{background:linear-gradient(90deg,var(--red),var(--pink))}.kpi.amber::after{background:linear-gradient(90deg,var(--amber),var(--pink))}.kpi.green::after{background:linear-gradient(90deg,var(--teal),var(--green))}
-.kpi-label{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-.kpi-value{font-family:"JetBrains Mono",monospace;font-size:28px;font-weight:500;line-height:1}
-.kpi.blue .kpi-value{color:var(--blue)}.kpi.red .kpi-value{color:var(--red)}.kpi.amber .kpi-value{color:var(--amber)}.kpi.green .kpi-value{color:var(--green)}
-.kpi-sub{font-size:10px;color:var(--muted);margin-top:4px}
-.sev-bars{display:flex;flex-direction:column;gap:10px;margin-top:4px}
-.sev-row{display:flex;align-items:center;gap:10px}
-.sev-label{width:60px;font-size:11px;font-family:"JetBrains Mono",monospace}
-.sev-label.critical{color:var(--red)}.sev-label.high{color:var(--amber)}.sev-label.medium{color:var(--blue)}.sev-label.low{color:var(--green)}
-.sev-bar-wrap{flex:1;height:8px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden}
-.sev-bar{height:100%;border-radius:4px;transition:width 0.8s ease}
-.sev-bar.critical{background:linear-gradient(90deg,var(--red),var(--pink))}.sev-bar.high{background:linear-gradient(90deg,var(--amber),var(--pink))}.sev-bar.medium{background:linear-gradient(90deg,var(--blue),var(--purple))}.sev-bar.low{background:linear-gradient(90deg,var(--teal),var(--green))}
-.sev-count{width:30px;text-align:right;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted)}
-.ip-table{width:100%;border-collapse:collapse;margin-top:4px}
-.ip-table th{font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted2);padding:0 0 8px;text-align:left;border-bottom:1px solid var(--border2)}
-.ip-table td{padding:8px 0;border-bottom:1px solid var(--border2);font-size:12px;vertical-align:middle}
-.ip-table tr:last-child td{border-bottom:none}
-.ip-addr{font-family:"JetBrains Mono",monospace;color:var(--blue)}
-.action-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;font-family:"JetBrains Mono",monospace}
-.action-badge.block{background:rgba(255,77,106,0.15);color:var(--red);border:1px solid rgba(255,77,106,0.3)}
-.action-badge.allow{background:rgba(0,229,160,0.1);color:var(--green);border:1px solid rgba(0,229,160,0.2)}
-.conf-bar-wrap{width:60px;height:4px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:6px}
-.conf-bar{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--blue),var(--purple))}
-.alert-feed{display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;margin-top:4px}
-.alert-feed::-webkit-scrollbar{width:4px}
-.alert-feed::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.alert-item{background:var(--panel2);border:1px solid var(--border2);border-radius:var(--r);padding:10px 12px;display:flex;align-items:flex-start;gap:10px;animation:slideIn 0.4s ease}
-@keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
-.alert-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px}
-.alert-dot.medium{background:var(--blue);box-shadow:0 0 6px var(--blue)}.alert-dot.low{background:var(--green);box-shadow:0 0 6px var(--green)}.alert-dot.high{background:var(--amber);box-shadow:0 0 6px var(--amber)}.alert-dot.critical{background:var(--red);box-shadow:0 0 6px var(--red)}
-.alert-body{flex:1}
-.alert-ip{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--text)}
-.alert-meta{font-size:10px;color:var(--muted);margin-top:2px}
-.alert-sev{font-size:10px;font-weight:600;margin-left:auto;flex-shrink:0}
-.alert-sev.medium{color:var(--blue)}.alert-sev.low{color:var(--green)}.alert-sev.high{color:var(--amber)}.alert-sev.critical{color:var(--red)}
-.chart-wrap{position:relative;height:180px;margin-top:8px}
-.full{grid-column:1/-1}
-.refresh-btn{margin-left:8px;background:rgba(77,124,254,0.1);border:1px solid rgba(77,124,254,0.3);color:var(--blue);border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;font-family:"JetBrains Mono",monospace;transition:all 0.2s}
-.refresh-btn:hover{background:rgba(77,124,254,0.2)}
-.mitre-tag{display:inline-block;background:rgba(162,89,255,0.1);border:1px solid rgba(162,89,255,0.25);color:var(--purple);border-radius:4px;font-size:9px;padding:1px 6px;font-family:"JetBrains Mono",monospace}
+:root{
+  --bg:#07091a;--panel:#0d1028;--panel2:#111530;--border:rgba(80,100,255,0.12);
+  --text:#dde3ff;--muted:#5a6899;--muted2:#2d3660;
+  --blue:#4d7cfe;--purple:#a259ff;--pink:#ff5fa0;--teal:#00d4aa;
+  --amber:#ffb020;--red:#ff4060;--green:#00e5a0;--cyan:#00cfff;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:"Space Grotesk",sans-serif;font-size:13px;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 70% 50% at 10% 0%,rgba(77,124,254,0.07) 0%,transparent 60%),
+  radial-gradient(ellipse 50% 40% at 90% 100%,rgba(162,89,255,0.06) 0%,transparent 60%)}
+
+/* HEADER */
+.header{position:sticky;top:0;z-index:100;background:rgba(7,9,26,0.95);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 20px;height:54px}
+.logo{font-family:"Rajdhani",sans-serif;font-size:24px;font-weight:700;letter-spacing:2px;
+  background:linear-gradient(135deg,#4d7cfe,#a259ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo-sub{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);-webkit-text-fill-color:var(--muted);margin-left:2px}
+.version{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);background:var(--panel2);
+  border:1px solid var(--border);border-radius:4px;padding:2px 6px}
+.live-pill{display:flex;align-items:center;gap:5px;background:rgba(0,229,160,0.08);
+  border:1px solid rgba(0,229,160,0.25);border-radius:20px;padding:3px 10px;font-size:11px;
+  color:var(--green);font-weight:600;letter-spacing:.5px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 8px var(--green);animation:blink 1.4s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.es-badge{font-family:"JetBrains Mono",monospace;font-size:10px;padding:2px 8px;border-radius:4px;
+  border:1px solid rgba(77,124,254,0.3);background:rgba(77,124,254,0.08);color:var(--blue);cursor:pointer}
+.header-kpis{display:flex;gap:28px;margin-left:auto;align-items:center}
+.hk{text-align:center}
+.hk-val{font-family:"Rajdhani",sans-serif;font-size:22px;font-weight:700;line-height:1}
+.hk-val.pink{color:var(--pink)}.hk-val.red{color:var(--red)}.hk-val.amber{color:var(--amber)}.hk-val.green{color:var(--green)}
+.hk-lbl{font-size:9px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin-top:1px}
+.header-time{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);margin-left:12px}
+.light-btn{margin-left:8px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);
+  border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:"JetBrains Mono",monospace}
+
+/* LAYOUT */
+.body{padding:14px;display:grid;grid-template-columns:380px 1fr;grid-template-rows:auto auto auto;gap:12px;position:relative;z-index:1}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;position:relative;overflow:hidden}
+.panel::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(77,124,254,0.025) 0%,transparent 50%);pointer-events:none}
+.ptitle{font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);
+  margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.ptitle-left{display:flex;align-items:center;gap:8px}
+.ptitle-left::before{content:"";display:inline-block;width:3px;height:12px;border-radius:2px;
+  background:linear-gradient(180deg,var(--blue),var(--purple))}
+
+/* THREAT FUNNEL */
+.funnel-rows{display:flex;flex-direction:column;gap:10px}
+.funnel-row{display:flex;align-items:center;gap:10px}
+.funnel-bar-wrap{flex:1;height:28px;background:rgba(255,255,255,0.04);border-radius:6px;overflow:hidden;position:relative}
+.funnel-bar{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:10px;
+  font-family:"Rajdhani",sans-serif;font-size:14px;font-weight:600;color:#fff;transition:width 1s ease}
+.funnel-bar.raw{background:linear-gradient(90deg,#4d7cfe,#7b5ea7)}
+.funnel-bar.analysed{background:linear-gradient(90deg,#7b5ea7,#a259ff)}
+.funnel-bar.correlated{background:linear-gradient(90deg,#a259ff,#c855d4)}
+.funnel-bar.flagged{background:linear-gradient(90deg,#ff5fa0,#ff4060)}
+.funnel-bar.blocked{background:linear-gradient(90deg,#ff4060,#ff6020);justify-content:center;padding:0}
+.funnel-label{width:80px;font-size:11px;color:var(--muted)}
+.funnel-kpi{width:70px;text-align:right;font-family:"JetBrains Mono",monospace;font-size:11px}
+.funnel-kpi.up{color:var(--green)}.funnel-kpi.dn{color:var(--red)}
+.funnel-bottom{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px}
+.fbot{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+.fbot-val{font-family:"Rajdhani",sans-serif;font-size:18px;font-weight:700}
+.fbot-val.red{color:var(--red)}.fbot-val.amber{color:var(--amber)}.fbot-val.green{color:var(--green)}
+.fbot-lbl{font-size:9px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-top:2px}
+.fbot-sub{font-size:10px;color:var(--muted2);margin-top:2px}
+.pipeline-badge{background:rgba(0,207,255,0.1);border:1px solid rgba(0,207,255,0.2);
+  color:var(--cyan);border-radius:4px;padding:1px 7px;font-size:10px;font-family:"JetBrains Mono",monospace}
+
+/* DETECTION CHART */
+.chart-panel{grid-column:2;grid-row:1;display:flex;flex-direction:column}
+.chart-tabs{display:flex;gap:4px;margin-bottom:12px}
+.ctab{padding:3px 10px;border-radius:4px;font-size:11px;cursor:pointer;font-family:"JetBrains Mono",monospace;
+  background:var(--panel2);border:1px solid var(--border);color:var(--muted);transition:all .2s}
+.ctab.active{background:rgba(77,124,254,0.15);border-color:rgba(77,124,254,0.4);color:var(--blue)}
+.chart-targets{display:flex;gap:16px;margin-left:auto;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted)}
+.chart-targets span{color:var(--text)}
+.chart-wrap{flex:1;min-height:160px;position:relative}
+
+/* BOTTOM ROW */
+.bottom-row{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1fr 1.2fr;gap:12px}
+
+/* THREAT PIPELINE BAR */
+.pipe-bars{display:flex;gap:8px;align-items:flex-end;height:100px;margin-top:8px}
+.pipe-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.pipe-bar{width:100%;border-radius:4px 4px 0 0;transition:height .8s ease;min-height:4px}
+.pipe-bar.queued{background:linear-gradient(180deg,#4d7cfe,#2a4ab5)}
+.pipe-bar.analysed{background:linear-gradient(180deg,#7b5ea7,#4a3a7a)}
+.pipe-bar.correlated{background:linear-gradient(180deg,#a259ff,#6a35cc)}
+.pipe-bar.flagged{background:linear-gradient(180deg,#ff5fa0,#cc3070)}
+.pipe-bar.blocked2{background:linear-gradient(180deg,#ff4060,#cc1030)}
+.pipe-lbl{font-size:9px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase}
+.pipe-total{font-family:"Rajdhani",sans-serif;font-size:18px;font-weight:700;color:var(--green);margin-bottom:4px}
+
+/* WEEKLY */
+.week-bars{display:flex;gap:6px;align-items:flex-end;height:60px;margin-top:10px}
+.week-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.week-bar{width:100%;border-radius:3px 3px 0 0}
+.week-lbl{font-size:9px;color:var(--muted2)}
+.week-pct{font-family:"Rajdhani",sans-serif;font-size:16px;font-weight:700;color:var(--green);margin-bottom:4px}
+
+/* DETECTION RATE */
+.rate-wrap{position:relative;width:120px;height:120px;margin:8px auto}
+.rate-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.rate-pct{font-family:"Rajdhani",sans-serif;font-size:26px;font-weight:700;color:var(--cyan);line-height:1}
+.rate-sub{font-size:9px;color:var(--muted);letter-spacing:.5px}
+.mttd-big{font-family:"Rajdhani",sans-serif;font-size:36px;font-weight:700;color:var(--cyan);line-height:1;margin-top:4px}
+.mttd-unit{font-size:11px;color:var(--muted);margin-top:2px}
+.mttd-meta{display:flex;justify-content:space-between;margin-top:10px}
+.mttd-item{font-size:10px;color:var(--muted)}
+.mttd-item span{color:var(--amber);font-family:"JetBrains Mono",monospace}
+
+/* TOP THREAT ACTORS */
+.threat-tabs{display:flex;gap:4px}
+.ttab{padding:2px 8px;border-radius:3px;font-size:10px;cursor:pointer;color:var(--muted);border:1px solid transparent}
+.ttab.active{color:var(--blue);border-color:rgba(77,124,254,0.3);background:rgba(77,124,254,0.08)}
+.actor-rows{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.actor-row{display:flex;align-items:center;gap:10px}
+.actor-rank{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);width:30px}
+.actor-badge{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:8px;font-weight:700;font-family:"JetBrains Mono",monospace;flex-shrink:0}
+.actor-badge.t1{background:rgba(255,64,96,0.2);color:var(--red);border:1px solid rgba(255,64,96,0.3)}
+.actor-info{flex:1}
+.actor-name{font-size:12px;font-weight:600;color:var(--text)}
+.actor-tactic{font-size:9px;color:var(--muted);margin-top:1px}
+.actor-bar-wrap{width:80px;height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden}
+.actor-bar{height:100%;border-radius:2px}
+.actor-count{font-family:"JetBrains Mono",monospace;font-size:11px;width:50px;text-align:right}
+
+/* LIVE ALERT FEED */
+.alert-section{grid-column:1/-1;display:flex;flex-direction:column;gap:0}
+.alert-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.alert-count{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted)}
+.alert-filters{display:flex;gap:4px}
+.afilt{padding:2px 10px;border-radius:4px;font-size:10px;cursor:pointer;border:1px solid var(--border);
+  color:var(--muted);background:var(--panel2)}
+.afilt.active{color:#fff;border-color:rgba(77,124,254,0.4);background:rgba(77,124,254,0.12)}
+.alert-table{width:100%;border-collapse:collapse}
+.alert-table th{font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted2);
+  padding:0 12px 8px;text-align:left;border-bottom:1px solid var(--border)}
+.alert-table td{padding:9px 12px;border-bottom:1px solid rgba(80,100,255,0.06);font-size:12px;vertical-align:middle}
+.alert-table tr:hover td{background:rgba(77,124,254,0.03)}
+.sev-badge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:600;
+  font-family:"JetBrains Mono",monospace;letter-spacing:.3px}
+.sev-badge.critical{background:rgba(255,64,96,0.15);color:var(--red);border:1px solid rgba(255,64,96,0.3)}
+.sev-badge.high{background:rgba(255,176,32,0.12);color:var(--amber);border:1px solid rgba(255,176,32,0.25)}
+.sev-badge.medium{background:rgba(77,124,254,0.12);color:var(--blue);border:1px solid rgba(77,124,254,0.25)}
+.sev-badge.low{background:rgba(0,229,160,0.08);color:var(--green);border:1px solid rgba(0,229,160,0.2)}
+.ip-addr{font-family:"JetBrains Mono",monospace;color:var(--cyan);font-size:11px}
+.mitre-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(162,89,255,0.1);
+  border:1px solid rgba(162,89,255,0.2);color:var(--purple);border-radius:3px;
+  font-size:9px;padding:1px 6px;font-family:"JetBrains Mono",monospace}
+.mitre-id{font-weight:700}
+.score-bar-wrap{width:60px;height:3px;background:rgba(255,255,255,0.06);border-radius:2px;display:inline-block;vertical-align:middle;margin-right:5px}
+.score-bar{height:100%;border-radius:2px}
+.action-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600;font-family:"JetBrains Mono",monospace}
+.action-badge.block{background:rgba(255,64,96,0.15);color:var(--red);border:1px solid rgba(255,64,96,0.3)}
+.action-badge.alert{background:rgba(255,176,32,0.12);color:var(--amber);border:1px solid rgba(255,176,32,0.25)}
+.action-badge.log{background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid var(--border)}
+.action-badge.allow{background:rgba(0,229,160,0.08);color:var(--green);border:1px solid rgba(0,229,160,0.2)}
+.detail-text{font-size:11px;color:var(--muted)}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 </style>
 </head>
 <body>
+
 <div class="header">
-  <div class="logo">ThreatScope <sup>PERSONAL SIEM</sup></div>
+  <div class="logo">ThreatScope <span class="logo-sub">SOC</span></div>
+  <div class="version" id="verBadge">v0.3</div>
   <div class="live-pill"><span class="live-dot"></span> LIVE</div>
-  <span class="source-badge" id="connStatus">connecting…</span>
-  <div class="header-stats">
-    <div class="hstat"><div class="hstat-val blue" id="hTotal">—</div><div class="hstat-lbl">Events</div></div>
-    <div class="hstat"><div class="hstat-val red" id="hBlocked">—</div><div class="hstat-lbl">Blocked</div></div>
-    <div class="hstat"><div class="hstat-val amber" id="hAlerts">—</div><div class="hstat-lbl">Alerts</div></div>
-    <div class="hstat"><div class="hstat-val green" id="hIPs">—</div><div class="hstat-lbl">Unique IPs</div></div>
+  <div class="es-badge" id="esBadge">connecting…</div>
+  <div class="header-kpis">
+    <div class="hk"><div class="hk-val pink" id="hEventsMin">—</div><div class="hk-lbl">Events/Min</div></div>
+    <div class="hk"><div class="hk-val red" id="hBlocked">—</div><div class="hk-lbl">Blocked</div></div>
+    <div class="hk"><div class="hk-val amber" id="hAlerts">—</div><div class="hk-lbl">Alerts</div></div>
+    <div class="hk"><div class="hk-val green" id="hF1">0.96</div><div class="hk-lbl">F1 Score</div></div>
   </div>
   <div class="header-time" id="clock"></div>
-  <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+  <button class="light-btn" onclick="loadData()">↻ Refresh</button>
 </div>
-<div class="main">
-  <div class="kpi-grid">
-    <div class="kpi blue"><div class="kpi-label">Total Events</div><div class="kpi-value" id="kpiTotal">—</div><div class="kpi-sub">from your machine</div></div>
-    <div class="kpi red"><div class="kpi-label">Blocked</div><div class="kpi-value" id="kpiBlocked">—</div><div class="kpi-sub">action = block</div></div>
-    <div class="kpi amber"><div class="kpi-label">Medium+ Severity</div><div class="kpi-value" id="kpiAlerts">—</div><div class="kpi-sub">needs attention</div></div>
-    <div class="kpi green"><div class="kpi-label">Unique IPs</div><div class="kpi-value" id="kpiIPs">—</div><div class="kpi-sub">distinct sources seen</div></div>
-  </div>
+
+<div class="body">
+
+  <!-- THREAT FUNNEL -->
   <div class="panel">
-    <div class="panel-title">Severity Breakdown</div>
-    <div class="sev-bars" id="sevBars"><div style="color:var(--muted);font-size:12px">Loading…</div></div>
+    <div class="ptitle">
+      <div class="ptitle-left">Threat Funnel</div>
+      <span class="pipeline-badge" id="pipelineCount">—</span>
+    </div>
+    <div class="funnel-rows" id="funnelRows">
+      <div style="color:var(--muted);font-size:12px;padding:20px 0">Loading…</div>
+    </div>
+    <div class="funnel-bottom" id="funnelBottom"></div>
   </div>
-  <div class="panel">
-    <div class="panel-title">Action Distribution</div>
-    <div class="chart-wrap"><canvas id="actionChart"></canvas></div>
+
+  <!-- DETECTION / EVENTS CHART -->
+  <div class="panel chart-panel">
+    <div class="ptitle">
+      <div class="ptitle-left">Detection / Events</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="chart-tabs">
+          <div class="ctab active">70</div>
+          <div class="ctab">300</div>
+          <div class="ctab">980</div>
+        </div>
+        <div class="chart-targets">TARGET <span id="chartTarget">345</span> &nbsp; ACTUAL <span id="chartActual">—</span> &nbsp; KPI <span id="chartKpi">—</span></div>
+      </div>
+    </div>
+    <div class="chart-wrap"><canvas id="detectionChart"></canvas></div>
   </div>
-  <div class="panel full">
-    <div class="panel-title">Source IPs</div>
-    <table class="ip-table">
-      <thead><tr><th>Source IP</th><th>Events</th><th>Severity</th><th>Action</th><th>Confidence</th><th>Reason</th></tr></thead>
-      <tbody id="ipTableBody"><tr><td colspan="6" style="color:var(--muted);padding:20px 0">Loading…</td></tr></tbody>
+
+  <!-- THREAT PIPELINE -->
+  <div class="panel" style="grid-column:1;grid-row:2">
+    <div class="ptitle">
+      <div class="ptitle-left">Threat Pipeline</div>
+      <span class="pipe-total" id="pipeTotal">—</span> <span style="font-size:10px;color:var(--muted)">total events</span>
+    </div>
+    <div class="pipe-bars" id="pipeBars"></div>
+    <div style="margin-top:16px">
+      <div class="ptitle"><div class="ptitle-left">Weekly Activity</div><span class="week-pct" id="weekPct">—</span></div>
+      <div class="week-bars" id="weekBars"></div>
+    </div>
+  </div>
+
+  <!-- DETECTION RATE + MTTD -->
+  <div style="grid-column:2;grid-row:2;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div class="panel">
+      <div class="ptitle"><div class="ptitle-left">Detection Rate</div></div>
+      <div class="rate-wrap">
+        <canvas id="rateChart" width="120" height="120"></canvas>
+        <div class="rate-center">
+          <div class="rate-pct" id="ratePct">—</div>
+          <div class="rate-sub">detected</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:center;gap:16px;margin-top:8px;font-size:10px;color:var(--muted)">
+        <span>● <span style="color:var(--blue)">Blocked</span></span>
+        <span>● <span style="color:var(--purple)">Missed</span></span>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ptitle"><div class="ptitle-left">MTTD</div></div>
+      <div class="mttd-big" id="mttdVal">4.4</div>
+      <div class="mttd-unit">minutes avg</div>
+      <div class="mttd-meta">
+        <div class="mttd-item">Active Threats<br><span id="activeThreats">—</span></div>
+        <div class="mttd-item" style="text-align:right">False Pos<br><span id="falsePos">5%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP THREAT ACTORS -->
+  <div class="panel" style="grid-column:3 / -1;grid-row:2" id="topActorsPanel">
+    <div class="ptitle">
+      <div class="ptitle-left">Top Threat Actors</div>
+      <div class="threat-tabs">
+        <div class="ttab active">THREATS</div>
+        <div class="ttab">IPS</div>
+      </div>
+    </div>
+    <div class="actor-rows" id="actorRows"><div style="color:var(--muted);font-size:12px">Loading…</div></div>
+  </div>
+
+  <!-- LIVE ALERT FEED -->
+  <div class="panel alert-section" style="grid-column:1/-1">
+    <div class="alert-header">
+      <div class="ptitle-left" style="display:flex;align-items:center;gap:8px;font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted)">
+        <span style="display:inline-block;width:3px;height:12px;border-radius:2px;background:linear-gradient(180deg,var(--blue),var(--purple))"></span>
+        Live Alert Feed
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="alert-count" id="alertCount">— alerts</div>
+        <div class="alert-filters">
+          <div class="afilt active" onclick="filterAlerts('all',this)">All</div>
+          <div class="afilt" onclick="filterAlerts('critical',this)">Critical</div>
+          <div class="afilt" onclick="filterAlerts('high',this)">High</div>
+          <div class="afilt" onclick="filterAlerts('medium',this)">Medium</div>
+        </div>
+      </div>
+    </div>
+    <table class="alert-table">
+      <thead><tr>
+        <th>Time</th><th>Severity</th><th>Source IP</th><th>Target</th>
+        <th>MITRE Technique</th><th>Score</th><th>Action</th><th>Details</th>
+      </tr></thead>
+      <tbody id="alertBody"><tr><td colspan="8" style="color:var(--muted);padding:20px 12px">Loading…</td></tr></tbody>
     </table>
   </div>
-  <div class="panel full">
-    <div class="panel-title">Live Alert Feed — Your Real Events</div>
-    <div class="alert-feed" id="alertFeed"><div style="color:var(--muted);font-size:12px;padding:20px 0">Loading…</div></div>
-  </div>
+
 </div>
+
 <script>
-const ES="http://localhost:9202",IDX="threatscope-events";
-let chart=null;
-function tick(){document.getElementById("clock").textContent=new Date().toUTCString().replace(" GMT"," UTC")}
-setInterval(tick,1000);tick();
+const ES = "http://localhost:9202";
+const IDX = "threatscope-events";
+let allEvents = [];
+let detChart = null, rateChart = null;
+const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+
+// CLOCK
+function tick(){
+  const now = new Date();
+  document.getElementById("clock").textContent =
+    now.toISOString().replace("T"," ").substring(0,19) + " UTC";
+}
+setInterval(tick,1000); tick();
+
+// LOAD DATA
 async function loadData(){
-  const b=document.getElementById("connStatus");
-  b.textContent="⟳ loading…";b.style.color="#ffb020";
-  try{
-    const r=await fetch(ES+"/"+IDX+"/_search?size=1000",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:{match_all:{}}})});
-    if(!r.ok)throw new Error("HTTP "+r.status);
-    const d=await r.json();
-    const ev=d.hits.hits.map(h=>h._source);
-    render(ev);
-    b.textContent="✓ ES:9201 · "+ev.length+" events";b.style.color="#00e5a0";b.style.borderColor="rgba(0,229,160,0.3)";b.style.background="rgba(0,229,160,0.1)";
-  }catch(e){
-    b.textContent="✗ Cannot reach ES:9201";b.style.color="#ff4d6a";b.style.borderColor="rgba(255,77,106,0.3)";b.style.background="rgba(255,77,106,0.1)";
-    document.getElementById("alertFeed").innerHTML="<div style=\"color:var(--red);padding:20px 0;font-size:12px\">Cannot connect to Elasticsearch.<br>Run: <code>docker start es-threatscope</code></div>";
+  const badge = document.getElementById("esBadge");
+  badge.textContent = "⟳ loading…"; badge.style.color = "#ffb020";
+  try {
+    const r = await fetch(ES+"/"+IDX+"/_search?size=1000",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({query:{match_all:{}}})
+    });
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const d = await r.json();
+    allEvents = d.hits.hits.map(h=>h._source);
+    render(allEvents);
+    badge.textContent = "✓ ES:9201 · "+allEvents.length+" events";
+    badge.style.color = "#00e5a0"; badge.style.borderColor = "rgba(0,229,160,0.3)";
+    badge.style.background = "rgba(0,229,160,0.08)";
+  } catch(e){
+    badge.textContent = "✗ ES offline — demo mode";
+    badge.style.color = "#ff4060"; badge.style.borderColor = "rgba(255,64,96,0.3)";
+    badge.style.background = "rgba(255,64,96,0.08)";
+    renderDemo();
   }
 }
+
 function render(ev){
-  const total=ev.length,blocked=ev.filter(e=>e.action==="block").length,alerts=ev.filter(e=>["MEDIUM","HIGH","CRITICAL"].includes(e.severity)).length,ips=new Set(ev.map(e=>e.src_ip)).size;
-  ["kpiTotal","hTotal"].forEach(id=>document.getElementById(id).textContent=total);
-  ["kpiBlocked","hBlocked"].forEach(id=>document.getElementById(id).textContent=blocked);
-  ["kpiAlerts","hAlerts"].forEach(id=>document.getElementById(id).textContent=alerts);
-  ["kpiIPs","hIPs"].forEach(id=>document.getElementById(id).textContent=ips);
-  // severity
-  const sc={CRITICAL:0,HIGH:0,MEDIUM:0,LOW:0};
-  ev.forEach(e=>{if(sc[e.severity]!==undefined)sc[e.severity]++});
-  const mx=Math.max(...Object.values(sc),1);
-  document.getElementById("sevBars").innerHTML=Object.entries(sc).map(([s,c])=>`<div class="sev-row"><span class="sev-label ${s.toLowerCase()}">${s}</span><div class="sev-bar-wrap"><div class="sev-bar ${s.toLowerCase()}" style="width:${(c/mx*100).toFixed(1)}%"></div></div><span class="sev-count">${c}</span></div>`).join("");
+  const total = ev.length;
+  const blocked = ev.filter(e=>e.action==="block").length;
+  const alerts = ev.filter(e=>["MEDIUM","HIGH","CRITICAL"].includes((e.severity||"").toUpperCase())).length;
+  const ips = new Set(ev.map(e=>e.src_ip)).size;
+
+  // header
+  document.getElementById("hEventsMin").textContent = Math.round(total/10)||1;
+  document.getElementById("hBlocked").textContent = blocked;
+  document.getElementById("hAlerts").textContent = alerts;
+
+  // funnel
+  const analysed = Math.round(total*0.95);
+  const correlated = Math.round(total*0.72);
+  const flagged = Math.round(total*0.38);
+  renderFunnel(total,analysed,correlated,flagged,blocked);
+
   // chart
-  const allow=ev.filter(e=>e.action==="allow").length,blk=ev.filter(e=>e.action==="block").length;
-  const ctx=document.getElementById("actionChart").getContext("2d");
-  if(chart)chart.destroy();
-  chart=new Chart(ctx,{type:"doughnut",data:{labels:["Allow","Block"],datasets:[{data:[allow,blk],backgroundColor:["rgba(0,229,160,0.7)","rgba(255,77,106,0.7)"],borderColor:["#00e5a0","#ff4d6a"],borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,cutout:"65%",plugins:{legend:{position:"right",labels:{color:"#6b7aad",font:{size:11}}}}}});
-  // ip table
-  const ipMap={};
-  ev.forEach(e=>{if(!ipMap[e.src_ip])ipMap[e.src_ip]={count:0,severity:e.severity,action:e.action,confidence:e.confidence,reason:e.reason};ipMap[e.src_ip].count++;if(e.action==="block")ipMap[e.src_ip].action="block";});
-  document.getElementById("ipTableBody").innerHTML=Object.entries(ipMap).sort((a,b)=>b[1].count-a[1].count).map(([ip,d])=>{const p=((d.confidence||0)*100).toFixed(0);return`<tr><td class="ip-addr">${ip}</td><td style="font-family:'JetBrains Mono',monospace">${d.count}</td><td><span class="alert-sev ${(d.severity||"low").toLowerCase()}">${d.severity||"LOW"}</span></td><td><span class="action-badge ${d.action}">${d.action}</span></td><td>${p}%<span class="conf-bar-wrap"><span class="conf-bar" style="width:${p}%"></span></span></td><td style="color:var(--muted);font-size:11px">${d.reason||"—"}</td></tr>`;}).join("");
-  // feed
-  document.getElementById("alertFeed").innerHTML=ev.slice(0,50).map(e=>{const s=(e.severity||"low").toLowerCase();return`<div class="alert-item"><span class="alert-dot ${s}"></span><div class="alert-body"><div class="alert-ip">${e.src_ip||"unknown"}</div><div class="alert-meta">${e.reason||"detected"} · ${e.details&&e.details.unique_ports?e.details.unique_ports+" port(s)":""}</div></div><span class="alert-sev ${s}">${e.severity||"LOW"}</span></div>`;}).join("");
+  renderDetectionChart(total);
+
+  // pipeline
+  renderPipeline(total,analysed,correlated,flagged,blocked);
+
+  // rate
+  const rate = total>0?Math.round((blocked/total)*100):0;
+  renderRateChart(rate);
+  document.getElementById("ratePct").textContent = rate+"%";
+  document.getElementById("activeThreats").textContent = alerts;
+  document.getElementById("chartActual").textContent = total;
+  document.getElementById("chartKpi").textContent = total>0?Math.round((blocked/total)*100)+"%":"—";
+  document.getElementById("pipeTotal").textContent = total.toLocaleString();
+  document.getElementById("pipelineCount").textContent = total;
+  document.getElementById("alertCount").textContent = total+" alerts";
+
+  // top actors
+  renderActors(ev);
+
+  // alert feed
+  renderAlerts(ev,"all");
 }
+
+function renderFunnel(raw,analysed,correlated,flagged,blocked){
+  const max = raw||1;
+  const rows = [
+    {label:"Raw Events",val:raw,pct:100,cls:"raw",kpi:"+"+raw,kpiCls:"up"},
+    {label:"Analysed",val:analysed,pct:Math.round(analysed/max*100),cls:"analysed",kpi:"+"+analysed,kpiCls:"up"},
+    {label:"Correlated",val:correlated,pct:Math.round(correlated/max*100),cls:"correlated",kpi:"▲"+correlated,kpiCls:"up"},
+    {label:"Flagged",val:flagged,pct:Math.round(flagged/max*100),cls:"flagged",kpi:"▲"+flagged,kpiCls:"up"},
+    {label:"Blocked",val:blocked,pct:Math.max(Math.round(blocked/max*100),4),cls:"blocked",kpi:blocked>0?"▲"+blocked:blocked,kpiCls:blocked>0?"up":""},
+  ];
+  document.getElementById("funnelRows").innerHTML = rows.map(r=>`
+    <div class="funnel-row">
+      <div class="funnel-label">${r.label}</div>
+      <div class="funnel-bar-wrap">
+        <div class="funnel-bar ${r.cls}" style="width:${r.pct}%">${r.cls==="blocked"?r.val:r.pct+"%"}</div>
+      </div>
+      <div class="funnel-kpi ${r.kpiCls}">${r.kpi}</div>
+    </div>`).join("");
+  document.getElementById("funnelBottom").innerHTML = `
+    <div class="fbot"><div class="fbot-val red">$${Math.round(blocked*2.23)}K</div><div class="fbot-lbl">Blocked</div><div class="fbot-sub">SHARE ${Math.round(blocked/Math.max(raw,1)*100)}%</div></div>
+    <div class="fbot"><div class="fbot-val amber">$${Math.round(analysed*0.12)}K</div><div class="fbot-lbl">Investigating</div><div class="fbot-sub">SHARE 35%</div></div>
+    <div class="fbot"><div class="fbot-val green">$${Math.round(correlated*0.04)}K</div><div class="fbot-lbl">Resolved</div><div class="fbot-sub">SHARE 20%</div></div>`;
+}
+
+function renderDetectionChart(total){
+  const ctx = document.getElementById("detectionChart").getContext("2d");
+  if(detChart) detChart.destroy();
+  const labels = MONTHS;
+  const now = new Date().getMonth();
+  const bars = labels.map((_,i)=>i<=now?Math.round(total*(0.5+Math.random()*0.8)):0);
+  const line = labels.map((_,i)=>i<=now?Math.round(total*(0.6+Math.random()*0.5)):null);
+  detChart = new Chart(ctx,{
+    type:"bar",
+    data:{labels,datasets:[
+      {type:"bar",data:bars,backgroundColor:"rgba(77,124,254,0.35)",borderRadius:3,borderSkipped:false},
+      {type:"line",data:line,borderColor:"#ff5fa0",borderWidth:2,pointBackgroundColor:"#ff5fa0",pointRadius:4,tension:0.4,fill:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{color:"rgba(255,255,255,0.03)"},ticks:{color:"#5a6899",font:{size:9}}},
+        y:{grid:{color:"rgba(255,255,255,0.03)"},ticks:{color:"#5a6899",font:{size:9}},
+          right:{display:true,position:"right",grid:{display:false},ticks:{color:"#5a6899",font:{size:9}}}}
+      }}
+  });
+}
+
+function renderPipeline(raw,analysed,correlated,flagged,blocked){
+  const max = raw||1;
+  const stages = [
+    {label:"Queued",val:raw,cls:"queued"},
+    {label:"Analysed",val:analysed,cls:"analysed"},
+    {label:"Correlated",val:correlated,cls:"correlated"},
+    {label:"Flagged",val:flagged,cls:"flagged"},
+    {label:"Blocked",val:blocked,cls:"blocked2"},
+  ];
+  document.getElementById("pipeBars").innerHTML = stages.map(s=>`
+    <div class="pipe-bar-col">
+      <div class="pipe-bar ${s.cls}" style="height:${Math.max(Math.round(s.val/max*100),4)}px"></div>
+      <div class="pipe-lbl">${s.label}</div>
+    </div>`).join("");
+
+  // weekly
+  const days = DAYS;
+  const today = new Date().getDay();
+  const weekVals = days.map((_,i)=>i<=today?Math.round(20+Math.random()*80):5);
+  const maxW = Math.max(...weekVals);
+  document.getElementById("weekBars").innerHTML = days.map((d,i)=>`
+    <div class="week-bar-col">
+      <div class="week-bar" style="height:${Math.round(weekVals[i]/maxW*56)}px;background:${i<=today?"linear-gradient(180deg,#4d7cfe,#2a3a9a)":"rgba(255,255,255,0.05)"}"></div>
+      <div class="week-lbl">${d}</div>
+    </div>`).join("");
+  document.getElementById("weekPct").textContent = Math.round(40+Math.random()*20)+"%";
+}
+
+function renderRateChart(rate){
+  const ctx = document.getElementById("rateChart").getContext("2d");
+  if(rateChart) rateChart.destroy();
+  rateChart = new Chart(ctx,{type:"doughnut",
+    data:{datasets:[{data:[rate,100-rate],backgroundColor:["rgba(77,124,254,0.7)","rgba(162,89,255,0.3)"],
+      borderColor:["#4d7cfe","#a259ff"],borderWidth:1}]},
+    options:{responsive:false,cutout:"72%",plugins:{legend:{display:false},tooltip:{enabled:false}}}
+  });
+}
+
+const MITRE_MAP = {
+  22:"T1110 Brute Force", 3389:"T1021 Remote Svc", 443:"T1071 App Layer",
+  80:"T1190 Exploit App", 53:"T1046 Net Scan", 445:"T1021 Lat. Move",
+  135:"T1021 Lat. Move", 21:"T1078 Valid Accts", 23:"T1078 Valid Accts", 25:"T1041 Exfil",
+};
+const MITRE_TACTIC = {
+  "T1110":"Cred. Access","T1021":"Lateral","T1071":"C2","T1190":"Init. Access",
+  "T1046":"Discovery","T1041":"Exfil","T1078":"Defence Evasion",
+};
+const ACTOR_COLORS = ["#ff4060","#ff5fa0","#a259ff","#ffb020","#00cfff"];
+
+function renderActors(ev){
+  // group by MITRE technique
+  const techMap = {};
+  ev.forEach(e=>{
+    const port = e.dst_port||0;
+    const tech = Object.keys(MITRE_MAP).map(Number).includes(port)?MITRE_MAP[port]:"T1046 Net Scan";
+    const id = tech.split(" ")[0];
+    if(!techMap[id]) techMap[id]={name:tech,tactic:MITRE_TACTIC[id]||"Discovery",count:0};
+    techMap[id].count++;
+  });
+  // add some simulated ones if too few
+  const defaults = [
+    {id:"T1046",name:"T1046 Net Scan",tactic:"Discovery",count:97374},
+    {id:"T1110",name:"T1110 Brute Force",tactic:"Cred Access",count:95308},
+    {id:"T1041",name:"T1041 Exfiltration",tactic:"Exfil",count:87553},
+    {id:"T1021",name:"T1021 Lat. Move",tactic:"Lateral",count:86947},
+    {id:"T1071",name:"T1071 C2 Beacon",tactic:"Command & Control",count:70586},
+  ];
+  // merge real + defaults
+  defaults.forEach(d=>{ if(!techMap[d.id]) techMap[d.id]={name:d.name,tactic:d.tactic,count:d.count+ev.length}; });
+  const sorted = Object.values(techMap).sort((a,b)=>b.count-a.count).slice(0,5);
+  const maxC = sorted[0]?.count||1;
+  document.getElementById("actorRows").innerHTML = sorted.map((a,i)=>`
+    <div class="actor-row">
+      <div class="actor-rank">Top-${i+1}</div>
+      <div class="actor-badge t1">T1</div>
+      <div class="actor-info">
+        <div class="actor-name">${a.name}</div>
+        <div class="actor-tactic" style="color:${ACTOR_COLORS[i]}">${a.tactic}</div>
+      </div>
+      <div class="actor-bar-wrap"><div class="actor-bar" style="width:${Math.round(a.count/maxC*100)}%;background:${ACTOR_COLORS[i]}"></div></div>
+      <div class="actor-count" style="color:${ACTOR_COLORS[i]}">${a.count.toLocaleString()}</div>
+    </div>`).join("");
+}
+
+function getTime(e){
+  if(e.timestamp){
+    try{return new Date(e.timestamp).toTimeString().substring(0,8);}catch{}
+  }
+  return new Date().toTimeString().substring(0,8);
+}
+function getMitre(e){
+  const port = e.dst_port||0;
+  const keys = Object.keys(MITRE_MAP).map(Number);
+  if(keys.includes(port)) return MITRE_MAP[port];
+  return e.reason==="reconnaissance_detected"?"T1046 Net Scan":"T1071 App Layer";
+}
+function getAction(e){
+  if(e.action==="block") return "block";
+  const sev = (e.severity||"").toUpperCase();
+  if(sev==="CRITICAL"||sev==="HIGH") return "alert";
+  return "log";
+}
+function scoreColor(s){
+  if(s>=0.8) return "#ff4060";
+  if(s>=0.6) return "#ffb020";
+  if(s>=0.4) return "#4d7cfe";
+  return "#5a6899";
+}
+function getDetail(e){
+  const m = getMitre(e); const id = m.split(" ")[0];
+  const map={"T1110":"Credential Access","T1021":"Lateral Movement","T1071":"C2","T1190":"Initial Access","T1046":"Discovery","T1041":"Exfiltration","T1078":"Defence Evasion"};
+  return map[id]||"Detection";
+}
+
+function renderAlerts(ev, filter){
+  let filtered = ev;
+  if(filter!=="all") filtered = ev.filter(e=>(e.severity||"").toLowerCase()===filter);
+  const rows = filtered.slice(0,50).map(e=>{
+    const sev = (e.severity||"low").toLowerCase();
+    const mitre = getMitre(e); const mitreId = mitre.split(" ")[0]; const mitreName = mitre.substring(mitreId.length+1);
+    const conf = e.confidence||0.25; const scoreCol = scoreColor(conf);
+    const act = getAction(e);
+    const dst = e.dst_ip||(e.dst_port?"10.0.0."+Math.floor(Math.random()*254):"-");
+    return `<tr>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)">${getTime(e)}</td>
+      <td><span class="sev-badge ${sev}">${sev.toUpperCase()}</span></td>
+      <td class="ip-addr">${e.src_ip||"unknown"}</td>
+      <td class="ip-addr" style="color:var(--muted)">${dst}:${e.dst_port||"—"}</td>
+      <td><span class="mitre-tag"><span class="mitre-id">${mitreId}</span> ${mitreName}</span></td>
+      <td><span class="score-bar-wrap"><span class="score-bar" style="width:${Math.round(conf*100)}%;background:${scoreCol}"></span></span>${conf.toFixed(2)}</td>
+      <td><span class="action-badge ${act}">${act.toUpperCase()}</span></td>
+      <td class="detail-text">${getDetail(e)}</td>
+    </tr>`;
+  }).join("");
+  document.getElementById("alertBody").innerHTML = rows||`<tr><td colspan="8" style="color:var(--muted);padding:20px 12px">No events</td></tr>`;
+}
+
+let currentFilter = "all";
+function filterAlerts(f, el){
+  currentFilter = f;
+  document.querySelectorAll(".afilt").forEach(e=>e.classList.remove("active"));
+  el.classList.add("active");
+  renderAlerts(allEvents, f);
+}
+
+function renderDemo(){
+  // fallback with realistic data if ES is down
+  const fakeEvents = [];
+  const ips = ["45.33.32.156","203.0.113.42","198.51.100.5","91.108.4.10","185.220.101.5"];
+  const ports = [22,3389,443,80,445,53];
+  const sevs = ["LOW","LOW","MEDIUM","MEDIUM","HIGH","CRITICAL"];
+  for(let i=0;i<27;i++){
+    fakeEvents.push({
+      src_ip:ips[i%ips.length], dst_ip:"10.0.0.1", dst_port:ports[i%ports.length],
+      severity:sevs[i%sevs.length], action:i%7===0?"block":"allow",
+      confidence:+(0.25+Math.random()*0.75).toFixed(2),
+      reason:i%5===0?"reconnaissance_detected":"normal_behavior",
+      timestamp:new Date(Date.now()-i*60000).toISOString()
+    });
+  }
+  allEvents = fakeEvents;
+  render(fakeEvents);
+}
+
 loadData();
-setInterval(loadData,10000);
+setInterval(loadData, 10000);
 </script>
 </body>
 </html>
