@@ -286,7 +286,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
         <div class="alert-filters">
           <div class="afilt active" onclick="filterAlerts('all',this)">All</div>
           <div class="afilt" onclick="filterAlerts('critical',this)">Critical</div>
-          <div class="afilt" onclick="filterAlerts('high',this)">High</div>
+          <div class="afilt" onclick="filterAlerts('low',this)">Low</div>
           <div class="afilt" onclick="filterAlerts('medium',this)">Medium</div>
         </div>
       </div>
@@ -400,10 +400,7 @@ function renderFunnel(raw,analysed,correlated,flagged,blocked){
       </div>
       <div class="funnel-kpi ${r.kpiCls}">${r.kpi}</div>
     </div>`).join("");
-  document.getElementById("funnelBottom").innerHTML = `
-    <div class="fbot"><div class="fbot-val red">$${Math.round(blocked*2.23)}K</div><div class="fbot-lbl">Blocked</div><div class="fbot-sub">SHARE ${Math.round(blocked/Math.max(raw,1)*100)}%</div></div>
-    <div class="fbot"><div class="fbot-val amber">$${Math.round(analysed*0.12)}K</div><div class="fbot-lbl">Investigating</div><div class="fbot-sub">SHARE 35%</div></div>
-    <div class="fbot"><div class="fbot-val green">$${Math.round(correlated*0.04)}K</div><div class="fbot-lbl">Resolved</div><div class="fbot-sub">SHARE 20%</div></div>`;
+  
 }
 
 function renderDetectionChart(total){
