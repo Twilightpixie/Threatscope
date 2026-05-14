@@ -518,9 +518,22 @@ function getTime(e){
 }
 function getMitre(e){
   const port = e.dst_port||0;
+  const REASON_MAP = {
+    "ssh_brute_force":           "T1110 Brute Force",
+    "lateral_movement":          "T1021 Lateral Move",
+    "c2_beacon":                 "T1071 C2 Beacon",
+    "dns_exfiltration":          "T1048 DNS Exfil",
+    "rdp_smb_chain":             "T1021 RDP Chain",
+    "web_fuzzing":               "T1190 Web Fuzzing",
+    "deprecated_protocol_sweep": "T1046 Proto Sweep",
+    "reconnaissance_detected":   "T1046 Net Scan",
+    "normal_behavior":           "T1071 App Layer",
+  };
+  const reason = e.reason || "";
+  if(REASON_MAP[reason]) return REASON_MAP[reason];
   const keys = Object.keys(MITRE_MAP).map(Number);
   if(keys.includes(port)) return MITRE_MAP[port];
-  return e.reason==="reconnaissance_detected"?"T1046 Net Scan":"T1071 App Layer";
+  return "T1046 Net Scan";
 }
 function getAction(e){
   if(e.action==="block") return "block";
@@ -592,6 +605,23 @@ function renderDemo(){
 
 loadData();
 setInterval(loadData, 10000);
+</script>
+
+
+
+<script>
+async function loadRealMetrics() {
+  try {
+    const r = await fetch('/metrics.json?' + Date.now());
+    if (!r.ok) return;
+    const m = await r.json();
+    if (m.f1       !== undefined) document.getElementById('hF1').textContent      = m.f1.toFixed(2);
+    if (m.mttd_min !== undefined) document.getElementById('mttdVal').textContent  = m.mttd_min.toFixed(1);
+    if (m.fp_rate  !== undefined) document.getElementById('falsePos').textContent = m.fp_rate.toFixed(1) + '%';
+    console.log('real metrics loaded:', m);
+  } catch(e) { console.warn('metrics not ready:', e); }
+}
+window.addEventListener('load', () => { loadRealMetrics(); setInterval(loadRealMetrics, 5000); });
 </script>
 </body>
 </html>
