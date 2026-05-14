@@ -50,7 +50,7 @@ python main.py
 [Ingestion] → parser → elastic_writer
 │
 ▼
-[AI Engine] — Isolation Forest anomaly detection
+[AI Engine] — rule-based anomaly detection
 │
 ▼
 [MITRE ATT&CK Enrichment] — technique mapping
