@@ -303,7 +303,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
 </div>
 
 <script>
-const ES = "http://localhost:9202";
+const ES = "http://localhost:9200";
 const IDX = "threatscope-events";
 let allEvents = [];
 let detChart = null, rateChart = null;
@@ -331,7 +331,7 @@ async function loadData(){
     const d = await r.json();
     allEvents = d.hits.hits.map(h=>h._source);
     render(allEvents);
-    badge.textContent = "✓ ES:9201 · "+allEvents.length+" events";
+    badge.textContent = "✓ ES:9200 · "+allEvents.length+" events";
     badge.style.color = "#00e5a0"; badge.style.borderColor = "rgba(0,229,160,0.3)";
     badge.style.background = "rgba(0,229,160,0.08)";
   } catch(e){

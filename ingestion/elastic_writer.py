@@ -1,6 +1,6 @@
 import json, requests
-ELASTIC_URL = "http://localhost:9201/threatscope-events/_doc"
-LOGS_URL    = "http://localhost:9201/threatscope-logs/_doc"
+ELASTIC_URL = "http://localhost:9200/threatscope-events/_doc"
+LOGS_URL    = "http://localhost:9200/threatscope-logs/_doc"
 HEADERS     = {"Content-Type": "application/json"}
 
 def send_to_elastic(event):
