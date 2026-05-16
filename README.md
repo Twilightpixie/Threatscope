@@ -1,28 +1,62 @@
-# 🛡️ ThreatScope SIEM
+# ThreatScope
 
-**An AI-powered Security Information and Event Management system built for MSc Cybersecurity research.**
+**ThreatScope is an explainable AI-driven SIEM for cyber threat intelligence.**
 
-ThreatScope combines machine learning anomaly detection, MITRE ATT&CK enrichment, automated IDS/IPS response, and explainable AI (XAI) into a modular, production-realistic pipeline.
+It turns raw security logs into understandable attack stories, MITRE ATT&CK mappings, risk scores, audit trails, executive reports, and AI-assisted response plans. The goal is simple: make a SIEM powerful enough for analysts, but clear enough for beginners, managers, and CEOs.
 
 [![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python)](https://python.org)
 [![Elasticsearch](https://img.shields.io/badge/Elasticsearch-8.x-orange?logo=elasticsearch)](https://elastic.co)
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Here-brightgreen)](https://twilightpixie.github.io/Threatscope/)
+[![Explainable AI](https://img.shields.io/badge/Explainable%20AI-SIEM%20Copilot-8b5cf6)](#ai-copilot)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-brightgreen)](https://twilightpixie.github.io/Threatscope/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 ---
 
-## 🌐 Live Demo
+## Live Demo
 
-👉 **[Visit the live demo dashboard here](https://twilightpixie.github.io/Threatscope/)**
+Open the GitHub Pages demo:
 
-The demo runs with simulated data so anyone can explore the interface without setup.
-For real live data from your own machine, follow the Quick Start below.
+**https://twilightpixie.github.io/Threatscope/**
+
+The hosted demo is a self-contained AI Copilot dashboard with simulated incidents, so anyone can explore ThreatScope without installing Python, Docker, or Elasticsearch.
 
 ---
 
-## ⚡ Quick Start — Run on Your Machine
+## What ThreatScope Does
 
-**Prerequisites:** Python 3.10+, Docker Desktop (running)
+ThreatScope connects the full security workflow:
+
+- Ingests and parses security logs
+- Detects anomalies with an AI engine
+- Maps activity to MITRE ATT&CK techniques
+- Correlates related events into attack campaigns
+- Generates IDS alerts and IPS-style block decisions
+- Creates explainable audit trails for every decision
+- Produces CEO-friendly and analyst-friendly reports
+- Provides an AI Copilot for summaries, next actions, and beginner explanations
+
+---
+
+## AI Copilot
+
+The AI Copilot is designed around four audiences:
+
+| Mode | Purpose |
+|---|---|
+| Executive | Business impact, current protection, decision needed |
+| SOC Analyst | Evidence, MITRE mapping, source/destination, confidence |
+| Incident Response | Containment steps, triage plan, escalation guidance |
+| Beginner Mode | Plain-English explanations for people new to cybersecurity |
+
+The current GitHub Pages demo uses local deterministic AI logic so it works offline. The interface is structured so a real LLM API can later receive the selected incident, evidence pack, MITRE technique, risk score, persona, and analyst question.
+
+More detail: [docs/AI_COPILOT.md](docs/AI_COPILOT.md)
+
+---
+
+## Quick Start
+
+Run the full local pipeline:
 
 ```bash
 git clone https://github.com/Twilightpixie/Threatscope.git
@@ -30,79 +64,123 @@ cd Threatscope
 ./setup.sh
 ```
 
-That's it. The script will:
-- Start Elasticsearch in Docker
-- Install Python dependencies
-- Process the sample log file
-- Open the live dashboard at **http://localhost:8080** automatically
+The setup script starts Elasticsearch, installs dependencies, processes sample logs, and opens the dashboard at:
 
-To ingest new logs and see the dashboard update live:
+```text
+http://localhost:8080
+```
+
+To run the pipeline again:
+
 ```bash
 source venv/bin/activate
 python main.py
 ```
 
----
+To open only the standalone AI Copilot demo locally:
 
-## 🏗️ Architecturelogs/network.log
-│
-▼
-[Ingestion] → parser → elastic_writer
-│
-▼
-[AI Engine] — rule-based anomaly detection
-│
-▼
-[MITRE ATT&CK Enrichment] — technique mapping
-│
-├── [IDS Engine] — alert generation
-├── [IPS Engine] — auto-block decisions
-└── [XAI] — human-readable explanations
-│
-▼
-[Elasticsearch] → [Dashboard — ui/index.html]
+```bash
+python3 -m http.server 8765
+```
+
+Then visit:
+
+```text
+http://localhost:8765/docs/
+```
 
 ---
 
-## 📁 Project Structure
+## Architecture
+
+```text
+logs/network.log
+      |
+      v
+Ingestion -> Parser -> Elasticsearch Writer
+      |
+      v
+AI Engine -> rule-based and explainable anomaly scoring
+      |
+      v
+MITRE ATT&CK Enrichment
+      |
+      +--> IDS Engine -> alerts
+      +--> IPS Engine -> block decisions
+      +--> Explainable AI -> human-readable reasoning
+      |
+      v
+Dashboard + AI Copilot + Audit Reports
+```
+
+---
+
+## Project Structure
+
+```text
 Threatscope/
-├── ai_engine/        # ML anomaly detection (Isolation Forest)
-├── correlation/      # MITRE ATT&CK enrichment
-├── evaluation/       # Precision, Recall, F1 metrics
-├── explain/          # Explainable AI (XAI)
-├── ids/              # Intrusion Detection System
-├── ips/              # Intrusion Prevention System
-├── ingestion/        # Log reader, parser, Elasticsearch writer
-├── intel/            # Threat intelligence
-├── logs/             # Sample network.log included
-├── mitre/            # MITRE ATT&CK technique definitions
-├── recon/            # Attack timeline reconstruction
-├── simulation/       # Attack simulation for testing
-├── ui/               # SOC Dashboard (index.html)
-├── main.py           # Pipeline entry point
-├── setup.sh          # One-command setup script
+├── ai_engine/          # ML anomaly detection
+├── correlation/        # MITRE ATT&CK enrichment
+├── docs/               # GitHub Pages demo and docs
+├── evaluation/         # Precision, recall, F1 metrics
+├── explain/            # Explainable AI narratives
+├── ids/                # Intrusion detection logic
+├── ips/                # Intrusion prevention decisions
+├── ingestion/          # Log reader, parser, Elasticsearch writer
+├── intel/              # Threat intelligence helpers
+├── logs/               # Sample network logs
+├── mitre/              # MITRE ATT&CK technique data
+├── recon/              # Attack timeline reconstruction
+├── simulation/         # Attack simulation data
+├── tests/              # Unit tests
+├── ui/                 # Local dashboard UI
+├── main.py             # Main pipeline entry point
+├── setup.sh            # One-command setup script
 └── requirements.txt
+```
 
 ---
 
-## 🧠 AI Engine
-
-Uses **Isolation Forest** for unsupervised anomaly detection over 60-second sliding windows. Features include connection count, unique ports, protocol distribution, and bytes transferred. Anomaly scores map directly to MITRE ATT&CK techniques.
-
----
-
-## 🗺️ MITRE ATT&CK Coverage
+## MITRE ATT&CK Coverage
 
 | Pattern | Technique | Tactic |
 |---|---|---|
-| Port scan (>50 unique ports) | T1046 | Discovery |
-| SSH brute force | T1110 | Credential Access |
+| Port scan | T1046 | Discovery |
+| SSH brute force | T1110 / T1110.001 | Credential Access |
 | Large outbound transfer | T1041 | Exfiltration |
-| Periodic beaconing | T1071 | Command & Control |
-| Internal SMB scanning | T1021 | Lateral Movement |
+| DNS or HTTPS beaconing | T1071 | Command and Control |
+| SMB lateral movement | T1021.002 | Lateral Movement |
+| WMI remote execution | T1047 | Execution |
+| LDAP enumeration | T1087 | Discovery |
 
 ---
 
-## 📄 Licence
+## Why ThreatScope Is Different
+
+Traditional SIEMs often show alerts that require expert interpretation. ThreatScope focuses on explainability:
+
+- **For analysts:** evidence, confidence, MITRE technique, and process chain
+- **For executives:** business impact, risk score, decision needed, and containment status
+- **For beginners:** cyber concepts explained in plain language
+- **For audits:** immutable-style decision records and downloadable reports
+
+ThreatScope is not just a dashboard. It is a security explanation system.
+
+---
+
+## Roadmap
+
+- Real LLM-backed AI Copilot API
+- Sigma rule import
+- YARA and Suricata integration
+- More MITRE ATT&CK coverage
+- Case management workflow
+- Slack/email/webhook alerting
+- Role-based views for analyst, executive, and auditor personas
+- Evidence integrity hashes for audit reports
+
+---
+
+## License
 
 MIT — see [LICENSE](LICENSE).
