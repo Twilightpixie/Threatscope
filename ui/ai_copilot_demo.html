@@ -232,7 +232,7 @@ table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:11px 12p
               <button class="btn" data-persona="learning" onclick="setPersona('learning')">Beginner Mode</button>
             </div>
             <div class="ai-console">
-              <textarea class="ai-prompt" id="aiPrompt" placeholder="Ask ThreatScope AI: What happened? How bad is it? What should the CEO approve? Explain this like I am new to cybersec."></textarea>
+              <textarea class="ai-prompt" id="aiPrompt" placeholder="Ask anything in normal English: What happened? Why is it risky? Could it be a false positive? What should I tell my manager? What evidence proves this?"></textarea>
               <div class="toolbar" style="margin:0">
                 <button class="btn primary" onclick="askAI()">Ask AI</button>
                 <button class="btn" onclick="quickAsk('summary')">Summarize incident</button>
@@ -509,10 +509,10 @@ function renderAICopilot(){
 }
 function quickAsk(type, focus=true){
  const prompts={
-  summary:"Summarize this incident for leadership.",
-  actions:"Give me the exact next actions.",
+  summary:"Summarize this incident in plain English.",
+  actions:"What should we do next?",
   beginner:"Explain this like I am brand new to cybersecurity.",
-  ceo:"Write a CEO-ready brief.",
+  ceo:"What should I tell leadership?",
   executive:"Summarize this incident for leadership.",
   analyst:"Give the technical SOC analysis.",
   ir:"Give incident response steps.",
@@ -524,18 +524,96 @@ function quickAsk(type, focus=true){
 }
 function askAI(type){
  if(!$("aiOutput"))return;
- const q=($("aiPrompt").value||"summarize").toLowerCase();
- $("aiOutput").innerHTML=buildAIAnswer(type||q,q);
+ const raw=($("aiPrompt").value||"").trim();
+ const q=(raw||"Summarize this incident in plain English.").toLowerCase();
+ $("aiOutput").innerHTML=buildAIAnswer(type||"",q,raw);
 }
-function buildAIAnswer(type,q){
+function includesAny(q,terms){return terms.some(t=>q.includes(t))}
+function bullets(items){return `<ul>${items.map(x=>`<li>${x}</li>`).join("")}</ul>`}
+function selectedContext(a,note){
+ return [
+  `${a.event} was observed from ${a.ip} to ${a.dst} over ${a.proto}.`,
+  `ThreatScope mapped it to MITRE ${a.mitre}, scored it ${a.risk}/100, and assigned ${a.confidence}% AI confidence.`,
+  `Current response is ${a.action}. ${containmentText(a)}`,
+  note.business
+ ];
+}
+function explainMitre(a){
+ const map={
+  "T1110.001":"Password guessing or brute force against a login service.",
+  "T1071.001":"Web-based command-and-control traffic that can blend into normal HTTP or HTTPS activity.",
+  "T1071.004":"DNS-based command-and-control or tunneling that can hide inside normal name lookups.",
+  "T1021.002":"Remote services over SMB, often used for lateral movement between Windows systems.",
+  "T1047":"Windows Management Instrumentation, often used to run commands remotely.",
+  "T1046":"Network service discovery, usually a reconnaissance step before exploitation."
+ };
+ return map[a.mitre]||"A MITRE ATT&CK technique that gives analysts a shared name for the attacker behavior.";
+}
+function falsePositiveView(a){
+ const reasons=[
+  `Evidence supporting the alert: ${a.evidence}`,
+  `The risk score is ${a.risk}/100 with ${a.confidence}% confidence, so this is not only a low-quality raw log.`,
+  `The mapped technique is ${a.mitre}: ${explainMitre(a)}`
+ ];
+ const checks=[
+  "Check whether the source IP, user, or host is owned by the business.",
+  "Look for a matching maintenance window, vulnerability scan, backup job, or admin task.",
+  "Compare this event with earlier activity from the same source, destination, protocol, and MITRE technique.",
+  "If the business context is legitimate, downgrade the alert and record the reason in the audit trail."
+ ];
+ return `<h3>False Positive Check</h3><p>This could be a false positive only if the behavior matches an approved business activity. Right now ThreatScope treats it as suspicious because the evidence and risk score are strong enough to require review.</p>${bullets(reasons)}<p><b>How to verify:</b></p>${bullets(checks)}`;
+}
+function naturalLanguageAnswer(type,q,raw,a,note,plan,evidence){
+ const wantsBeginner=type==="beginner"||includesAny(q,["new to","beginner","simple","explain simply","teach me","easy words","plain english"]);
+ const wantsActions=type==="actions"||includesAny(q,["what should","next action","next step","do next","fix","respond","mitigate","remediate","incident response"]);
+ const wantsCEO=type==="ceo"||includesAny(q,["ceo","leadership","manager","boss","board","executive","stakeholder","tell them"]);
+ const wantsEvidence=includesAny(q,["evidence","prove","proof","why did","why flagged","why alert","reason","detected"]);
+ const wantsRisk=includesAny(q,["how bad","severity","risk","danger","impact","business impact","priority"]);
+ const wantsMitre=includesAny(q,["mitre","attack technique","ttp","tactic","technique"]);
+ const wantsForecast=includesAny(q,["next move","forecast","predict","what happens next","future"]);
+ const wantsFalsePositive=includesAny(q,["false positive","legitimate","normal traffic","safe","mistake"]);
+ const wantsCompare=includesAny(q,["top risk","highest","compare","all incidents","other attacks","worst"]);
+ const wantsTimeline=includesAny(q,["timeline","chain","process","audit trail","steps happened","how did"]);
+ const wantsReport=includesAny(q,["report","write up","summary for report","copy paste","document"]);
+ const hasTypedIntent=wantsBeginner||wantsActions||wantsCEO||wantsEvidence||wantsRisk||wantsMitre||wantsForecast||wantsFalsePositive||wantsCompare||wantsTimeline||wantsReport;
+
+ if(wantsFalsePositive)return falsePositiveView(a);
+ if(wantsCompare){
+  return `<h3>Top Incident Comparison</h3><p>The selected incident is <b>${a.event}</b> at ${a.risk}/100 risk. The current highest risks are:</p>${bullets(topRisks().map(x=>`${x.event}: ${x.risk}/100, ${x.severity.toUpperCase()}, ${x.action}, ${x.mitre}`))}<p>The selected case should stay prioritized if it affects an exposed service, has repeated attempts, or connects to credential access or lateral movement.</p>`;
+ }
+ if(wantsTimeline){
+  const chain=a.process.split(" -> ");
+  return `<h3>Audit Chain Explanation</h3><p>ThreatScope kept the decision trace so an analyst can defend why the alert was raised and what response happened.</p>${bullets(chain.map((p,i)=>`${i+1}. ${auditLabel(p)}: ${auditText(p)}`))}`;
+ }
+ if(wantsEvidence){
+  return `<h3>Why ThreatScope Flagged It</h3><p>The alert is based on observable behavior, not just a label.</p>${bullets(evidence)}<p><b>MITRE meaning:</b> ${explainMitre(a)}</p><p><b>Decision:</b> ${note.decision}</p>`;
+ }
+ if(wantsRisk){
+  return `<h3>Risk And Business Impact</h3><p><b>Severity:</b> ${a.severity.toUpperCase()} with risk ${a.risk}/100 and ${a.confidence}% confidence.</p><p>${note.business}</p><p>${note.impact}</p><p><b>Priority:</b> ${a.severity==="critical"?"Handle immediately and keep containment active.":a.severity==="high"?"Investigate quickly and keep monitoring for spread.":"Review with supporting context before taking disruptive action."}</p>`;
+ }
+ if(wantsMitre){
+  return `<h3>MITRE ATT&CK Mapping</h3><p><b>${a.mitre}</b> means: ${explainMitre(a)}</p><p>For this incident, the mapping helps explain the attack behavior in a standard language that analysts, managers, and auditors can all understand.</p><p><b>Observed event:</b> ${a.event}</p><p><b>Evidence:</b> ${a.evidence}</p>`;
+ }
+ if(wantsForecast){
+  return `<h3>Likely Next Move</h3><p>${aiForecast(a)}</p><p>Watch for repeated activity from nearby IPs, new usernames, successful authentication, lateral movement, or command-and-control traffic after the initial signal.</p>`;
+ }
+ if(wantsReport){
+  return `<h3>Report-Ready Summary</h3><p>${a.event} was detected from ${a.ip} to ${a.dst} over ${a.proto}. ThreatScope mapped the activity to MITRE ${a.mitre}, assigned ${a.risk}/100 risk with ${a.confidence}% confidence, and set the response to ${a.action}.</p><p>${note.headline}</p><p>${note.decision}</p>`;
+ }
+ if(wantsActions||(!hasTypedIntent&&aiPersona==="ir")){
+  return `<h3>Recommended Next Actions</h3><p><b>Priority:</b> ${a.severity.toUpperCase()} - risk ${a.risk}/100 - response ${a.action}</p>${bullets(plan)}<p><b>Forecast:</b> ${aiForecast(a)}</p>`;
+ }
+ if(wantsCEO||(!hasTypedIntent&&aiPersona==="executive")){
+  return `<h3>Leadership Brief</h3><p><b>What happened:</b> ${note.headline}</p><p><b>Business risk:</b> ${note.business}</p><p><b>Current protection:</b> ${note.impact}</p><p><b>Decision needed:</b> ${note.decision}</p><p><b>Confidence:</b> ThreatScope rates this ${a.risk}/100 risk with ${a.confidence}% AI confidence.</p>`;
+ }
+ if(wantsBeginner||(!hasTypedIntent&&aiPersona==="learning")){
+  return `<h3>Plain-English Explanation</h3><p>${note.headline}</p><p>In simple terms, ThreatScope noticed behavior that does not look like normal business activity. It checked the pattern, mapped it to a known attacker technique, and chose a response based on risk.</p><p><b>Why it matters:</b> ${note.business}</p><p><b>What to do:</b> ${note.decision}</p>`;
+ }
+ return `<h3>Answer To Your Question</h3><p><b>Your question:</b> ${raw||"Summarize this incident."}</p>${bullets(selectedContext(a,note))}<p><b>Recommended answer:</b> ${note.decision}</p><p><b>Useful next check:</b> ${plan[0]}</p>`;
+}
+function buildAIAnswer(type,q,raw=""){
  const a=selected,note=executiveNotes[a.id],plan=actionPlan(a),evidence=evidencePack(a);
- const wantsBeginner=type==="beginner"||q.includes("new")||q.includes("simple")||q.includes("beginner")||aiPersona==="learning";
- const wantsActions=type==="actions"||q.includes("action")||q.includes("do next")||q.includes("fix")||aiPersona==="ir";
- const wantsCEO=type==="ceo"||q.includes("ceo")||q.includes("leadership")||aiPersona==="executive";
- if(wantsBeginner)return `<h3>Beginner Explanation</h3><p>${note.headline}</p><p>Think of this like someone repeatedly trying keys on a locked office door. ThreatScope noticed the pattern, checked it against known attack behavior, and either blocked it or sent it for review.</p><p><b>Why it matters:</b> ${note.business}</p><p><b>Good news:</b> ${note.impact}</p><p><b>Simple next step:</b> ${note.decision}</p>`;
- if(wantsActions)return `<h3>AI Incident Response Plan</h3><p><b>Priority:</b> ${a.severity.toUpperCase()} · Risk ${a.risk}/100 · ${a.action}</p><ul>${plan.map(x=>`<li>${x}</li>`).join("")}</ul><p><b>Forecast:</b> ${aiForecast(a)}</p>`;
- if(wantsCEO)return `<h3>CEO-Ready Brief</h3><p><b>What happened:</b> ${note.headline}</p><p><b>Business risk:</b> ${note.business}</p><p><b>Current protection:</b> ${note.impact}</p><p><b>Decision needed:</b> ${note.decision}</p><p><b>Confidence:</b> ThreatScope rates this ${a.risk}/100 risk with ${a.confidence}% AI confidence.</p>`;
- return `<h3>SOC Analyst AI Analysis</h3><p><b>${a.event}</b> maps to <b>${a.mitre}</b> and is rated <b>${a.risk}/100</b>.</p><p><b>Evidence:</b></p><ul>${evidence.map(x=>`<li>${x}</li>`).join("")}</ul><p><b>Process chain:</b> ${a.process}</p><p><b>Recommendation:</b> ${a.recommendation}</p>`;
+ return naturalLanguageAnswer(type,q,raw,a,note,plan,evidence);
 }
 function renderAI(){
  const note=executiveNotes[selected.id];
